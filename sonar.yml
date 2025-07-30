@@ -1,0 +1,33 @@
+name: Reusable - SonarQube Scan
+
+on:
+  workflow_call:
+    inputs:
+      sonar-project-key:
+        required: true
+        type: string
+      sonar-org:
+        required: false
+        type: string
+      sonar-host-url:
+        required: true
+        type: string
+    secrets:
+      SONAR_TOKEN:
+        required: true
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sonar Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectKey: ${{ inputs.sonar-project-key }}
+          organization: ${{ inputs.sonar-org }}
+          args: >
+            -Dsonar.host.url=${{ inputs.sonar-host-url }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

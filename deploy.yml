@@ -1,0 +1,49 @@
+name: Reusable - Deploy
+
+on:
+  workflow_call:
+    inputs:
+      strategy:
+        required: true
+        type: string
+      kubeconfig:
+        required: false
+        type: string
+      helm-release:
+        required: false
+        type: string
+      helm-chart:
+        required: false
+        type: string
+      argo-app:
+        required: false
+        type: string
+    secrets:
+      KUBECONFIG_DATA:
+        required: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Kubeconfig
+        if: inputs.strategy != 'argocd'
+        run: |
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > kubeconfig
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
+
+      - name: Helm Deploy
+        if: inputs.strategy == 'helm'
+        run: |
+          helm upgrade --install ${{ inputs.helm-release }} ${{ inputs.helm-chart }} --kubeconfig kubeconfig
+
+      - name: Kubectl Apply
+        if: inputs.strategy == 'kubectl'
+        run: |
+          kubectl apply -f manifests/ --kubeconfig kubeconfig
+
+      - name: ArgoCD Sync
+        if: inputs.strategy == 'argocd'
+        run: |
+          argocd app sync ${{ inputs.argo-app }} --insecure

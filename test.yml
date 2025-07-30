@@ -1,0 +1,37 @@
+name: Reusable - Test
+
+on:
+  workflow_call:
+    inputs:
+      language:
+        required: true
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: inputs.language == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run Tests (Node)
+        if: inputs.language == 'node'
+        run: |
+          npm ci
+          npm test -- --coverage
+
+      - name: Setup Java
+        if: inputs.language == 'java'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Run Tests (Java)
+        if: inputs.language == 'java'
+        run: mvn test

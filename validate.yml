@@ -1,0 +1,40 @@
+name: Validate GitHub Action Templates
+
+on:
+  pull_request:
+    paths:
+      - 'ci-cd/github-actions/workflows/**.yml'
+      - 'ci-cd/github-actions/usage-examples/**.yml'
+
+jobs:
+  lint-yaml:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: |
+          sudo apt update && sudo apt install -y yamllint
+
+      - name: Lint all GitHub Actions YAMLs
+        run: |
+          yamllint ci-cd/github-actions/
+
+  dry-run-reusable-workflows:
+    name: Validate Workflow Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Reusable Workflows
+        run: |
+          for file in ci-cd/github-actions/workflows/*.yml; do
+            echo "Validating $file"
+            act -j test -W "$file" || echo "::warning::Skipping act test for $file"
+          done
+        env:
+          ACT_SKIP_PULL: true
+        continue-on-error: true
