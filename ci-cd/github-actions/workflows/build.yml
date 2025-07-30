@@ -12,10 +12,18 @@ on:
       java-version:
         required: false
         type: string
+      working-directory:
+        required: false
+        type: string
+        default: '.'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
